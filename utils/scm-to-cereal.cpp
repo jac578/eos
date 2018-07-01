@@ -20,18 +20,12 @@
 #include "eos/morphablemodel/MorphableModel.hpp"
 #include "eos/morphablemodel/io/cvssp.hpp"
 
-#include "opencv2/core/core.hpp"
-
 #include "boost/program_options.hpp"
-#include "boost/filesystem.hpp"
 
-#include <vector>
 #include <iostream>
-#include <fstream>
 
 using namespace eos;
 namespace po = boost::program_options;
-namespace fs = boost::filesystem;
 using std::cout;
 using std::endl;
 
@@ -39,52 +33,56 @@ using std::endl;
  * Reads a CVSSP .scm Morphable Model file and converts it
  * to a cereal binary file.
  */
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-	fs::path scmmodelfile, isomapfile, outputfile;
-	bool save_shape_only;
-	try {
-		po::options_description desc("Allowed options");
-		desc.add_options()
-			("help,h",
-				"display the help message")
-			("model,m", po::value<fs::path>(&scmmodelfile)->required(),
-				"a CVSSP .scm Morphable Model file")
-			("isomap,t", po::value<fs::path>(&isomapfile),
-				"optional isomap containing the texture mapping coordinates")
-			("shape-only,s", po::value<bool>(&save_shape_only)->default_value(false)->implicit_value(true),
-				"save only the shape-model part of the full 3DMM")
-			("output,o", po::value<fs::path>(&outputfile)->required()->default_value("converted_model.bin"),
-				"output filename for the Morphable Model in cereal binary format")
-			;
-		po::variables_map vm;
-		po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
-		if (vm.count("help")) {
-			cout << "Usage: scm-to-cereal [options]" << endl;
-			cout << desc;
-			return EXIT_SUCCESS;
-		}
-		po::notify(vm);
-	}
-	catch (const po::error& e) {
-		cout << "Error while parsing command-line arguments: " << e.what() << endl;
-		cout << "Use --help to display a list of options." << endl;
-		return EXIT_SUCCESS;
-	}
+    std::string scmmodelfile, isomapfile, outputfile;
+    bool save_shape_only;
+    try
+    {
+        po::options_description desc("Allowed options");
+        // clang-format off
+        desc.add_options()
+            ("help,h", "display the help message")
+            ("model,m", po::value<std::string>(&scmmodelfile)->required(),
+                "a CVSSP .scm Morphable Model file")
+            ("isomap,t", po::value<std::string>(&isomapfile),
+                "optional isomap containing the texture mapping coordinates")
+            ("shape-only,s", po::value<bool>(&save_shape_only)->default_value(false)->implicit_value(true),
+                "save only the shape-model part of the full 3DMM")
+            ("output,o", po::value<std::string>(&outputfile)->required()->default_value("converted_model.bin"),
+                "output filename for the Morphable Model in cereal binary format");
+        // clang-format on
+        po::variables_map vm;
+        po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+        if (vm.count("help"))
+        {
+            cout << "Usage: scm-to-cereal [options]" << endl;
+            cout << desc;
+            return EXIT_SUCCESS;
+        }
+        po::notify(vm);
+    } catch (const po::error& e)
+    {
+        cout << "Error while parsing command-line arguments: " << e.what() << endl;
+        cout << "Use --help to display a list of options." << endl;
+        return EXIT_FAILURE;
+    }
 
-	// Load the .scm Morphable Model and save it as cereal model:
-	morphablemodel::MorphableModel morphable_model = morphablemodel::load_scm_model(scmmodelfile, isomapfile);
+    // Load the .scm Morphable Model and save it as cereal model:
+    morphablemodel::MorphableModel morphable_model = morphablemodel::load_scm_model(scmmodelfile, isomapfile);
 
-	if (save_shape_only)
-	{
-		// Save only the shape model - to generate the public sfm_shape_3448.bin
-		morphablemodel::MorphableModel shape_only_model(morphable_model.get_shape_model(), morphablemodel::PcaModel(), morphable_model.get_texture_coordinates());
-		morphablemodel::save_model(shape_only_model, outputfile.string());
-	}
-	else {
-		morphablemodel::save_model(morphable_model, outputfile.string());
-	}
+    if (save_shape_only)
+    {
+        // Save only the shape model - to generate the public sfm_shape_3448.bin
+        const morphablemodel::MorphableModel shape_only_model(morphable_model.get_shape_model(),
+                                                              morphablemodel::PcaModel(),
+                                                              morphable_model.get_texture_coordinates());
+        morphablemodel::save_model(shape_only_model, outputfile);
+    } else
+    {
+        morphablemodel::save_model(morphable_model, outputfile);
+    }
 
-	cout << "Saved converted model as " << outputfile.string() << "." << endl;
-	return EXIT_SUCCESS;
+    cout << "Saved converted model as " << outputfile << "." << endl;
+    return EXIT_SUCCESS;
 }

@@ -19,17 +19,18 @@
  */
 #pragma once
 
-#ifndef COEFFICIENTS_HPP_
-#define COEFFICIENTS_HPP_
+#ifndef EOS_COEFFICIENTS_HPP
+#define EOS_COEFFICIENTS_HPP
 
 #include "cereal/cereal.hpp"
 #include "cereal/archives/json.hpp"
 
-#include <vector>
 #include <string>
+#include <vector>
+#include <fstream>
 
 namespace eos {
-	namespace morphablemodel {
+namespace morphablemodel {
 
 /**
  * Saves coefficients (for example PCA shape coefficients) to a json file.
@@ -40,15 +41,36 @@ namespace eos {
  */
 inline void save_coefficients(std::vector<float> coefficients, std::string filename)
 {
-	std::ofstream file(filename);
-	if (file.fail()) {
-		throw std::runtime_error("Error opening file for writing: " + filename);
-	}
-	cereal::JSONOutputArchive output_archive(file);
-	output_archive(cereal::make_nvp("shape_coefficients", coefficients));
+    std::ofstream file(filename);
+    if (!file)
+    {
+        throw std::runtime_error("Error opening file for writing: " + filename);
+    }
+    cereal::JSONOutputArchive output_archive(file);
+    output_archive(cereal::make_nvp("shape_coefficients", coefficients));
 };
 
-	} /* namespace morphablemodel */
+/**
+ * Loads coefficients (for example PCA shape coefficients) from a json file.
+ *
+ * @param[in] filename The file to write.
+ * @return Returns vector of floats.
+ * @throws std::runtime_error if unable to open the given file for reading.
+ */
+inline std::vector<float> load_coefficients(std::string filename)
+{
+    std::vector<float> coefficients;
+    std::ifstream file(filename);
+    if (!file)
+    {
+        throw std::runtime_error("Error opening file for reading: " + filename);
+    }
+    cereal::JSONInputArchive input_archive(file);
+    input_archive(cereal::make_nvp("shape_coefficients", coefficients));
+    return coefficients;
+};
+
+} /* namespace morphablemodel */
 } /* namespace eos */
 
-#endif /* COEFFICIENTS_HPP_ */
+#endif /* EOS_COEFFICIENTS_HPP */

@@ -19,53 +19,65 @@
  */
 #pragma once
 
-#ifndef EOS_LANDMARK_HPP_
-#define EOS_LANDMARK_HPP_
+#ifndef EOS_LANDMARK_HPP
+#define EOS_LANDMARK_HPP
 
+#include <algorithm>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 namespace eos {
-	namespace core {
+namespace core {
 
 /**
  * @brief Representation of a landmark, consisting of a landmark name and
- * coordinates of the given type. Usually, the type would be \c cv::Vec2f.
+ * coordinates of the given type. Usually, the type would be \c Eigen::Vector2f.
  */
-template<class LandmarkType>
+template <class LandmarkType>
 struct Landmark
 {
-	std::string name; ///< Name of the landmark, often used as identifier.
-	LandmarkType coordinates; ///< The position or coordinates of the landmark.
+    std::string name;         ///< Name of the landmark, often used as identifier.
+    LandmarkType coordinates; ///< The position or coordinates of the landmark.
 };
 
 /**
  * @brief A trivial collection of landmarks that belong together.
  */
-template<class LandmarkType> using LandmarkCollection = std::vector<Landmark<LandmarkType>>;
+template <class LandmarkType>
+using LandmarkCollection = std::vector<Landmark<LandmarkType>>;
+
+/**
+ * @brief Shorthand for a 2D floating point landmark type.
+ */
+// using Landmark2f = Landmark<std::array<float, 2>>;
+
+/**
+ * @brief Alias for the 2D landmark point type.
+ */
+// using Point2f = Eigen::Vector2f;
+// using Point2f = std::array<float, 2>;
 
 /**
  * @brief Filters the given LandmarkCollection and returns a new LandmarkCollection
  * containing all landmarks whose name matches the one given by \p filter.
  *
  * @param[in] landmarks The input LandmarkCollection to be filtered.
- * @param[in] filter A landmark name (identifier) by which the given LandmarkCollection is filtered.
+ * @param[in] filter A list of landmark names (identifiers) by which the given LandmarkCollection is filtered.
  * @return A new, filtered LandmarkCollection.
  */
-template<class T>
+template <class T>
 LandmarkCollection<T> filter(const LandmarkCollection<T>& landmarks, const std::vector<std::string>& filter)
 {
-	LandmarkCollection<T> filtered_landmarks;
-	using std::begin;
-	using std::end;
-	std::copy_if(begin(landmarks), end(landmarks), std::back_inserter(filtered_landmarks),
-		[&](const Landmark<T>& lm) { return std::find(begin(filter), end(filter), lm.name) != end(filter); }
-	);
-	return filtered_landmarks;
+    LandmarkCollection<T> filtered_landmarks;
+    using std::begin;
+    using std::end;
+    std::copy_if(
+        begin(landmarks), end(landmarks), std::back_inserter(filtered_landmarks),
+        [&](const Landmark<T>& lm) { return std::find(begin(filter), end(filter), lm.name) != end(filter); });
+    return filtered_landmarks;
 };
 
-	} /* namespace core */
+} /* namespace core */
 } /* namespace eos */
 
-#endif /* EOS_LANDMARK_HPP_ */
+#endif /* EOS_LANDMARK_HPP */
